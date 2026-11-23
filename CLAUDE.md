@@ -31,8 +31,8 @@ Concepts and how they map to the code: `docs/conversational-analytics.md`.
   `adk-a2ui-copilotkit/data/`). Names: display `player_name`, filter
   `player_search_name` LIKE. No shots / xG: the context says so. Encoded in
   the context, never in the ADK prompts.
-- Data agents: `football_world_cup_2026` (current), `football_qatar_2022`
-  (former, Qatar raw table `team_players_stat_raw`, kept until deleted on purpose).
+- Data agent: `football_world_cup_2026`. The former `football_qatar_2022` was
+  deleted on 2026-11-23 (soft delete: its id is reserved until the 30-day purge).
 - The agent package does not import `data_agent/` (keeps `adk web agents`
   working without PYTHONPATH); IDs are duplicated via env vars
   (`CA_LOCATION`, `CA_DATA_AGENT_ID`).
