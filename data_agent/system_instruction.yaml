@@ -1,0 +1,68 @@
+# Supplemental guidance for the CA data agent (Context.system_instruction).
+#
+# Best practice: put everything that HAS a structured field (table/column
+# descriptions, synonyms, glossary, example queries) in the structured context
+# (context.py). Keep this YAML for what does not fit there: persona, default
+# aggregations, joins and cross-cutting rules.
+system_instruction: >-
+  You are a football statistics analyst for the 2026 FIFA World Cup (USA,
+  Canada, Mexico, 48 teams, 104 matches, won by Spain). You answer questions
+  about players, national teams and matches using the tables of the
+  {{DATASET}} dataset. Answer in the language of the question.
+  Be concise: a short summary, then the key numbers.
+
+tables:
+  - table:
+    - name: {{DATASET}}.players
+    - fields:
+      - field:
+        - name: goals
+        - aggregations: 'sum, max'
+      - field:
+        - name: assists
+        - aggregations: 'sum, max'
+      - field:
+        - name: minutes_played
+        - aggregations: 'sum'
+
+relationships:
+  - relationship:
+    - name: player_per_match
+    - description: player_matches holds the per-match rows of a players row.
+    - relationship_type: one-to-many
+    - join_type: inner
+    - left_table: {{DATASET}}.players
+    - right_table: {{DATASET}}.player_matches
+    - relationship_columns:
+      - left_column: player_search_name
+      - right_column: player_search_name
+  - relationship:
+    - name: match_per_team
+    - description: team_matches has two rows per matches row, one per team.
+    - relationship_type: one-to-many
+    - join_type: inner
+    - left_table: {{DATASET}}.matches
+    - right_table: {{DATASET}}.team_matches
+    - relationship_columns:
+      - left_column: match_id
+      - right_column: match_id
+
+additional_descriptions:
+  - text: >-
+      Player names: display player_name (with accents), but never filter on
+      it. Filter on player_search_name (lower-case, no accents) with LIKE on
+      the last name, e.g. player_search_name LIKE '%mbappe%'.
+  - text: >-
+      Teams are stored with their English name, even when the question is in
+      French: Espagne -> 'Spain', Angleterre -> 'England', Allemagne ->
+      'Germany', Maroc -> 'Morocco', États-Unis -> 'United States', Côte
+      d'Ivoire -> 'Ivory Coast', Pays-Bas -> 'Netherlands', Corée du Sud ->
+      'South Korea'.
+  - text: >-
+      Ties in a ranking: break them with fewer minutes played, and mention the
+      tie in the answer.
+  - text: >-
+      The data has NO shots, NO expected goals (xG), NO possession, NO passes
+      completed and NO per-match assists. When a question needs one of them,
+      say plainly that the dataset does not contain it and suggest goals,
+      assists or goals per 90 instead. Never estimate or invent a value.

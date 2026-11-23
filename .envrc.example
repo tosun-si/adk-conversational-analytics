@@ -1,0 +1,25 @@
+# Copy to .envrc (gitignored) and run `direnv allow`.
+
+# GCP
+export GCP_PROJECT_ID=gb-poc-373711
+export GOOGLE_CLOUD_PROJECT=$GCP_PROJECT_ID
+export GOOGLE_CLOUD_LOCATION=europe-west1
+export GOOGLE_GENAI_USE_VERTEXAI=true
+
+# Conversational Analytics data agent (see data_agent/)
+export CA_LOCATION=global
+export CA_DATA_AGENT_ID=football_world_cup_2026
+
+# Orchestrator model (gemini-3.x Flash is served from the global endpoint only)
+export MODEL=gemini-3.8-flash
+export MODEL_LOCATION=global
+
+# ADK agent: native (DataAgentToolset) | mcp (MCP Toolbox on TOOLBOX_URL)
+export CA_MODE=native
+export TOOLBOX_URL=http://127.0.0.1:5001
+
+# uv venv
+if [ -f pyproject.toml ]; then
+  [ -d .venv ] || uv sync
+  source .venv/bin/activate
+fi

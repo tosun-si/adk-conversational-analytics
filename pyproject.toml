@@ -1,0 +1,25 @@
+[project]
+name = "adk-conversational-analytics"
+version = "0.1.0"
+description = "ADK orchestrator + Conversational Analytics API data agent (2026 World Cup on BigQuery), as a native ADK tool or an MCP tool"
+requires-python = ">=3.12"
+dependencies = [
+    # `toolbox` extra → ToolboxToolset (MCP Toolbox for Databases client).
+    # DataAgentToolset (native CA tools) ships with ADK >= 1.23.
+    "google-adk[toolbox]>=2.14.0",
+    # Conversational Analytics API SDK (v1, GA). Used by the data agent
+    # provisioning script and the raw stream viewer, not by the ADK agent.
+    "google-cloud-geminidataanalytics>=0.13.6",
+    # CA returns charts as Vega-Lite specs only (PNG/SVG were removed in v1).
+    # Rendered server-side to PNG so `adk web` can show them as artifacts.
+    "vl-convert-python>=1.8.0",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.0",
+]
+
+[tool.uv]
+package = false

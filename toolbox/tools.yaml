@@ -1,0 +1,31 @@
+# MCP Toolbox for Databases — exposes the CA data agent as an MCP tool.
+#
+# Derived from the prebuilt `conversational-analytics-with-data-agent` config,
+# trimmed to `ask_data_agent` only (the ADK agent is pinned to one data agent;
+# listing/inspecting agents would just be noise for the LLM).
+# Env vars are resolved by Toolbox at startup (see docker-compose.yaml).
+kind: source
+name: ca-source
+type: cloud-gemini-data-analytics
+projectId: ${CLOUD_GDA_PROJECT}
+# false → Toolbox calls CA with ITS OWN identity (ADC / service account).
+# true  → it forwards the caller's OAuth token (per-user BigQuery ACLs).
+useClientOAuth: false
+---
+kind: tool
+name: ask_data_agent
+type: conversational-analytics-ask-data-agent
+source: ca-source
+location: ${CLOUD_GDA_LOCATION:global}
+maxResults: ${CLOUD_GDA_MAX_RESULTS:50}
+description: |
+  Answer a question about 2026 FIFA World Cup player, team and match statistics
+  by asking a Conversational Analytics data agent. It generates and runs the
+  SQL on BigQuery and returns its reasoning, the SQL, the rows, an optional
+  chart and a final answer. The data agent does not see the conversation: the
+  question must be self-contained.
+---
+kind: toolset
+name: football
+tools:
+  - ask_data_agent

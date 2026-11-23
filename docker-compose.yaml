@@ -1,0 +1,69 @@
+# Local stack:
+#   toolbox       — MCP Toolbox for Databases, CA data agent as an MCP tool (:5001)
+#   adk-web       — ADK dev UI, CA_MODE=native (DataAgentToolset)           (:8080)
+#   adk-web-mcp   — ADK dev UI, CA_MODE=mcp   (ToolboxToolset → toolbox)    (:8081)
+#
+# Same image, same agent, only CA_MODE changes → side-by-side demo of the two
+# transports hitting the SAME data agent.
+#
+# GCP credentials: your local ADC is mounted read-only. Run
+# `gcloud auth application-default login` if it is missing or expired.
+
+x-gcp-env: &gcp-env
+  GCP_PROJECT_ID: ${GCP_PROJECT_ID:-gb-poc-373711}
+  GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-gb-poc-373711}
+  GOOGLE_CLOUD_LOCATION: ${GOOGLE_CLOUD_LOCATION:-europe-west1}
+  GOOGLE_GENAI_USE_VERTEXAI: ${GOOGLE_GENAI_USE_VERTEXAI:-true}
+  GOOGLE_APPLICATION_CREDENTIALS: /tmp/adc.json
+
+x-adc: &adc
+  - ${HOME}/.config/gcloud/application_default_credentials.json:/tmp/adc.json:ro
+
+x-agent: &agent
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: football-ca-agent:local
+  volumes: *adc
+
+services:
+  toolbox:
+    image: us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:1.13.1
+    ports:
+      # Host 5001: macOS AirPlay Receiver already listens on 5000.
+      - "5001:5000"
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/adc.json
+      CLOUD_GDA_PROJECT: ${GCP_PROJECT_ID:-gb-poc-373711}
+      CLOUD_GDA_LOCATION: ${CA_LOCATION:-global}
+      CLOUD_GDA_MAX_RESULTS: ${CA_MAX_ROWS:-50}
+    volumes:
+      - ${HOME}/.config/gcloud/application_default_credentials.json:/tmp/adc.json:ro
+      - ./toolbox/tools.yaml:/config/tools.yaml:ro
+    command: ["--config", "/config/tools.yaml", "--address", "0.0.0.0", "--port", "5000"]
+
+  adk-web:
+    <<: *agent
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *gcp-env
+      CA_MODE: native
+      CA_LOCATION: ${CA_LOCATION:-global}
+      CA_DATA_AGENT_ID: ${CA_DATA_AGENT_ID:-football_world_cup_2026}
+      MODEL: ${MODEL:-gemini-3.8-flash}
+      MODEL_LOCATION: ${MODEL_LOCATION:-global}
+
+  adk-web-mcp:
+    <<: *agent
+    ports:
+      - "8081:8080"
+    environment:
+      <<: *gcp-env
+      CA_MODE: mcp
+      TOOLBOX_URL: http://toolbox:5000
+      CA_DATA_AGENT_ID: ${CA_DATA_AGENT_ID:-football_world_cup_2026}
+      MODEL: ${MODEL:-gemini-3.8-flash}
+      MODEL_LOCATION: ${MODEL_LOCATION:-global}
+    depends_on:
+      - toolbox

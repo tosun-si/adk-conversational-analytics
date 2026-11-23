@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.python-version
+
+# Env / secrets
+.envrc
+.env.local
+
+# Charts dumped by `python -m data_agent.chat`
+out/
+
+# ADK local artifacts / sessions
+.adk/
+
+# OS / IDE
+.DS_Store
+.idea/
+*.iml
