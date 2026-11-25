@@ -27,179 +27,248 @@ MAX_BILLED_BYTES = 1_000_000_000
 
 # Column descriptions already live in BigQuery (data/schemas/ of the sibling
 # repo) and CA reads them. Only the columns that need French vocabulary or a
-# usage rule are authored here: (name, description, synonyms).
+# usage rule are authored here.
 _PLAYER_FIELDS = [
-    (
-        "player_name",
-        "Player name with accents as published by FIFA ('Kylian Mbappé'). Display it, never filter on it.",
-        ["joueur", "player", "nom"],
+    ca.Field(
+        name="player_name",
+        description="Player name with accents as published by FIFA ('Kylian Mbappé'). Display it, never filter on it.",
+        synonyms=["joueur", "player", "nom"],
     ),
-    (
-        "player_search_name",
-        "Lower-case ASCII player name ('kylian mbappe'). Filter on it with LIKE '%<last name>%'.",
-        ["recherche joueur"],
+    ca.Field(
+        name="player_search_name",
+        description="Lower-case ASCII player name ('kylian mbappe'). Filter on it with LIKE '%<last name>%'.",
+        synonyms=["recherche joueur"],
     ),
-    (
-        "team",
-        "National team, English name ('France', 'Spain', 'Ivory Coast').",
-        ["équipe", "sélection", "pays", "nation"],
+    ca.Field(
+        name="team",
+        description="National team, English name ('France', 'Spain', 'Ivory Coast').",
+        synonyms=["équipe", "sélection", "pays", "nation"],
     ),
-    (
-        "club",
-        "Club at the time of the tournament ('Paris Saint-Germain', 'Real Madrid C. F.').",
-        ["club", "équipe de club"],
+    ca.Field(
+        name="club",
+        description="Club at the time of the tournament ('Paris Saint-Germain', 'Real Madrid C. F.').",
+        synonyms=["club", "équipe de club"],
     ),
-    (
-        "club_country",
-        "3-letter code of the club's league country: FRA = Ligue 1, ENG = Premier League, ESP = LaLiga.",
-        ["championnat", "ligue", "league"],
+    ca.Field(
+        name="club_country",
+        description="3-letter code of the club's league country: FRA = Ligue 1, ENG = Premier League, ESP = LaLiga.",
+        synonyms=["championnat", "ligue", "league"],
     ),
-    (
-        "team_stage_reached",
-        "How far the player's national team went; 'Champion' = world champion.",
-        ["parcours", "champion du monde", "élimination"],
+    ca.Field(
+        name="team_stage_reached",
+        description="How far the player's national team went; 'Champion' = world champion.",
+        synonyms=["parcours", "champion du monde", "élimination"],
     ),
-    (
-        "goals",
-        "Goals scored, penalties included, own goals and shoot-outs excluded.",
-        ["buts", "buteurs"],
+    ca.Field(
+        name="goals",
+        description="Goals scored, penalties included, own goals and shoot-outs excluded.",
+        synonyms=["buts", "buteurs"],
     ),
-    ("assists", "Assists (FBref).", ["passes décisives", "passeurs", "offrandes"]),
-    ("minutes_played", "Total minutes played.", ["temps de jeu", "minutes"]),
-    ("matches_started", "Matches started.", ["titularisations", "titulaire"]),
-    (
-        "matches_played",
-        "Matches played (started or came on).",
-        ["matchs joués", "sélections"],
+    ca.Field(
+        name="assists",
+        description="Assists (FBref).",
+        synonyms=["passes décisives", "passeurs", "offrandes"],
     ),
-    ("goals_per_90", "Goals per 90 minutes.", ["buts par 90", "efficacité"]),
-    ("age_at_tournament", "Age on 2026-06-11.", ["âge", "jeune", "plus jeune"]),
-    ("yellow_cards", "Yellow cards.", ["cartons jaunes"]),
-    ("red_cards", "Red cards.", ["cartons rouges", "expulsions"]),
-]
-
-# (table, description, synonyms, authored fields)
-_TABLES = [
-    (
-        "players",
-        (
-            "One row per player of the 2026 FIFA World Cup (USA, Canada, Mexico) with "
-            "tournament-wide statistics: goals, assists, minutes, cards, club. "
-            "First choice for any player question."
-        ),
-        ["joueurs", "players", "stats joueurs", "buteurs"],
-        _PLAYER_FIELDS,
+    ca.Field(
+        name="minutes_played",
+        description="Total minutes played.",
+        synonyms=["temps de jeu", "minutes"],
     ),
-    (
-        "teams",
-        (
-            "One row per national team (48): group, stage reached, final ranking, "
-            "wins/draws/losses, goals for/against, clean sheets, cards."
-        ),
-        ["équipes", "sélections", "nations", "classement"],
-        [("team", "National team, English name.", ["équipe", "sélection", "pays"])],
+    ca.Field(
+        name="matches_started",
+        description="Matches started.",
+        synonyms=["titularisations", "titulaire"],
     ),
-    (
-        "team_matches",
-        (
-            "One row per team and per match (2 rows per match): goals for/against, "
-            "result. Use it for any 'per team per match / per stage' question."
-        ),
-        ["matchs par équipe", "résultats", "parcours match par match"],
-        [("team", "The team this row is about.", ["équipe", "sélection"])],
+    ca.Field(
+        name="matches_played",
+        description="Matches played (started or came on).",
+        synonyms=["matchs joués", "sélections"],
     ),
-    (
-        "player_matches",
-        (
-            "One row per player and per match played: goals, minutes, cards, started. "
-            "Use it for 'match after match' questions about a player."
-        ),
-        ["match par match", "feuille de match", "stats par match"],
-        [],
+    ca.Field(
+        name="goals_per_90",
+        description="Goals per 90 minutes.",
+        synonyms=["buts par 90", "efficacité"],
     ),
-    (
-        "matches",
-        (
-            "One row per match (104): stage, teams, score after 90 minutes and after "
-            "extra time, penalty shoot-out, winner, venue, attendance, referee."
-        ),
-        ["matchs", "rencontres", "scores", "finale"],
-        [],
+    ca.Field(
+        name="age_at_tournament",
+        description="Age on 2026-06-11.",
+        synonyms=["âge", "jeune", "plus jeune"],
     ),
-]
-
-# The business vocabulary (in the sibling repo these were prompts/business_rules.md).
-# (term, definition, labels = the words users type)
-_GLOSSARY = [
-    (
-        "Goal contributions",
-        "goals + assists, from the players table.",
-        ["joueur décisif", "contributions", "buts + passes", "le plus décisif"],
+    ca.Field(
+        name="yellow_cards", description="Yellow cards.", synonyms=["cartons jaunes"]
     ),
-    (
-        "Efficiency ranking",
-        (
-            "Rankings on goals_per_90 or minutes_per_goal only include players with "
-            "minutes_played >= 180; otherwise a one-goal cameo tops the list. Say so."
-        ),
-        ["efficacité", "le plus efficace", "buts par 90", "ratio"],
-    ),
-    (
-        "Knockout stage",
-        "Matches with stage_order >= 2 (Round of 32 onwards).",
-        ["phase finale", "phase à élimination directe", "matchs à élimination"],
-    ),
-    (
-        "World champion",
-        (
-            "The champion team: teams.stage_reached = 'Champion' (players: "
-            "team_stage_reached = 'Champion')."
-        ),
-        ["champion du monde", "vainqueur", "a gagné la Coupe du monde"],
-    ),
-    (
-        "Ligue 1 player",
-        "Player whose club plays in France: players.club_country = 'FRA'.",
-        ["joueur de Ligue 1", "championnat de France"],
-    ),
-    (
-        "PSG",
-        "Paris Saint-Germain: players.club = 'Paris Saint-Germain'.",
-        ["PSG", "Paris", "le club de la capitale"],
-    ),
-    (
-        "Team style",
-        (
-            "OFFENSIVE if goals_for / matches_played >= 2.0, SOLID DEFENCE if "
-            "goals_against / matches_played < 1.0, else BALANCED (teams table)."
-        ),
-        ["style de jeu", "équipe offensive", "meilleure défense"],
-    ),
-    (
-        "Discipline points",
-        "yellow_cards * 1 + red_cards * 3. Lower is cleaner.",
-        ["fair-play", "discipline", "équipe la plus propre"],
-    ),
-    (
-        "Penalty shoot-out",
-        "Shoot-out kicks are never goals. A match won on penalties counts as a win.",
-        ["tirs au but", "séance de penalties"],
+    ca.Field(
+        name="red_cards",
+        description="Red cards.",
+        synonyms=["cartons rouges", "expulsions"],
     ),
 ]
 
 
-def _table_reference(table, description, synonyms, fields) -> ca.BigQueryTableReference:
+def _table(
+    *,
+    table_id: str,
+    description: str,
+    synonyms: list[str],
+    fields: list[ca.Field] | None = None,
+) -> ca.BigQueryTableReference:
     return ca.BigQueryTableReference(
         project_id=PROJECT_ID,
         dataset_id=DATASET_ID,
-        table_id=table,
+        table_id=table_id,
         schema=ca.Schema(
             description=description,
             synonyms=synonyms,
             tags=["football", "world cup 2026"],
-            fields=[ca.Field(name=n, description=d, synonyms=s) for n, d, s in fields],
+            fields=fields or [],
         ),
     )
+
+
+# `synonyms` = other names of the table itself, never a hint about what it holds
+# (that goes in the description or a glossary term).
+_TABLES = [
+    _table(
+        table_id="players",
+        description=(
+            "One row per player of the 2026 FIFA World Cup (USA, Canada, Mexico) with "
+            "tournament-wide statistics: goals, assists, minutes, cards, club. "
+            "First choice for any player question."
+        ),
+        synonyms=["joueurs", "players", "stats joueurs", "buteurs"],
+        fields=_PLAYER_FIELDS,
+    ),
+    _table(
+        table_id="teams",
+        description=(
+            "One row per national team (48): group, stage reached, final ranking, "
+            "wins/draws/losses, goals for/against, clean sheets, cards."
+        ),
+        synonyms=["équipes", "sélections", "nations"],
+        fields=[
+            ca.Field(
+                name="team",
+                description="National team, English name.",
+                synonyms=["équipe", "sélection", "pays"],
+            ),
+            ca.Field(
+                name="final_rank_bucket",
+                description=(
+                    "Final ranking in the tournament: 1 champion, 2 runner-up, 3 third, "
+                    "4 fourth, then the best possible rank of the round where the team "
+                    "went out (5 quarter-finals, 9 round of 16, 17 round of 32, 33 "
+                    "group stage). Teams eliminated in the same round share it."
+                ),
+                synonyms=["classement final", "rang final"],
+            ),
+        ],
+    ),
+    _table(
+        table_id="team_matches",
+        description=(
+            "One row per team and per match (2 rows per match): goals for/against, "
+            "result. Use it for any 'per team per match / per stage' question."
+        ),
+        synonyms=["matchs par équipe", "résultats", "parcours match par match"],
+        fields=[
+            ca.Field(
+                name="team",
+                description="The team this row is about.",
+                synonyms=["équipe", "sélection"],
+            )
+        ],
+    ),
+    _table(
+        table_id="player_matches",
+        description=(
+            "One row per player and per match played: goals, minutes, cards, started. "
+            "Use it for 'match after match' questions about a player."
+        ),
+        synonyms=["match par match", "feuille de match", "stats par match"],
+    ),
+    _table(
+        table_id="matches",
+        description=(
+            "One row per match (104): stage, teams, score after 90 minutes and after "
+            "extra time, penalty shoot-out, winner, venue, attendance, referee."
+        ),
+        synonyms=["matchs", "rencontres", "scores", "finale"],
+    ),
+]
+
+# The business vocabulary (in the sibling repo these were prompts/business_rules.md).
+# `labels` = the words users type.
+_GLOSSARY = [
+    ca.GlossaryTerm(
+        display_name="Goal contributions",
+        description="goals + assists, from the players table.",
+        labels=["joueur décisif", "contributions", "buts + passes", "le plus décisif"],
+    ),
+    ca.GlossaryTerm(
+        display_name="Efficiency ranking",
+        description=(
+            "Rankings on goals_per_90 or minutes_per_goal only include players with "
+            "minutes_played >= 180; otherwise a one-goal cameo tops the list. Say so."
+        ),
+        labels=["efficacité", "le plus efficace", "buts par 90", "ratio"],
+    ),
+    ca.GlossaryTerm(
+        display_name="Final ranking",
+        description=(
+            "The final ranking of the TEAMS in the tournament: teams.final_rank_bucket "
+            "ascending (1 = champion), stage_reached as the label; teams eliminated in "
+            "the same round are tied. Not a player ranking: 'classement des buteurs / "
+            "passeurs' is a ranking of players on players.goals / players.assists."
+        ),
+        labels=[
+            "classement",
+            "classement final",
+            "classement des équipes",
+            "rang final",
+        ],
+    ),
+    ca.GlossaryTerm(
+        display_name="Knockout stage",
+        description="Matches with stage_order >= 2 (Round of 32 onwards).",
+        labels=["phase finale", "phase à élimination directe", "matchs à élimination"],
+    ),
+    ca.GlossaryTerm(
+        display_name="World champion",
+        description=(
+            "The champion team: teams.stage_reached = 'Champion' (players: "
+            "team_stage_reached = 'Champion')."
+        ),
+        labels=["champion du monde", "vainqueur", "a gagné la Coupe du monde"],
+    ),
+    ca.GlossaryTerm(
+        display_name="Ligue 1 player",
+        description="Player whose club plays in France: players.club_country = 'FRA'.",
+        labels=["joueur de Ligue 1", "championnat de France"],
+    ),
+    ca.GlossaryTerm(
+        display_name="PSG",
+        description="Paris Saint-Germain: players.club = 'Paris Saint-Germain'.",
+        labels=["PSG", "Paris", "le club de la capitale"],
+    ),
+    ca.GlossaryTerm(
+        display_name="Team style",
+        description=(
+            "OFFENSIVE if goals_for / matches_played >= 2.0, SOLID DEFENCE if "
+            "goals_against / matches_played < 1.0, else BALANCED (teams table)."
+        ),
+        labels=["style de jeu", "équipe offensive", "meilleure défense"],
+    ),
+    ca.GlossaryTerm(
+        display_name="Discipline points",
+        description="yellow_cards * 1 + red_cards * 3. Lower is cleaner.",
+        labels=["fair-play", "discipline", "équipe la plus propre"],
+    ),
+    ca.GlossaryTerm(
+        display_name="Penalty shoot-out",
+        description="Shoot-out kicks are never goals. A match won on penalties counts as a win.",
+        labels=["tirs au but", "séance de penalties"],
+    ),
+]
 
 
 def _example_queries() -> list[ca.ExampleQuery]:
@@ -297,15 +366,10 @@ def build_context() -> ca.Context:
     context = ca.Context(
         system_instruction=_system_instruction(),
         datasource_references=ca.DatasourceReferences(
-            bq=ca.BigQueryTableReferences(
-                table_references=[_table_reference(*t) for t in _TABLES]
-            )
+            bq=ca.BigQueryTableReferences(table_references=_TABLES)
         ),
         example_queries=_example_queries(),
-        glossary_terms=[
-            ca.GlossaryTerm(display_name=n, description=d, labels=labels)
-            for n, d, labels in _GLOSSARY
-        ],
+        glossary_terms=_GLOSSARY,
     )
     context.options.datasource.big_query_max_billed_bytes = MAX_BILLED_BYTES
     return context
